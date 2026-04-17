@@ -25,8 +25,7 @@ namespace AsyncId
 
 namespace Init
 {
-    
-    
+
     public interface IGetClientOn
     {
         string ClientOn(string clientMessage);
@@ -45,7 +44,7 @@ namespace Init
             return init.ToUpper();
         }
     }
-    
+
 }
 
 namespace DB
@@ -105,7 +104,7 @@ namespace APIStates
             try
             {
                 string[] states = ["NYC", "MA", "NH"];
-                
+
 
                 foreach (var st in states)
                 {
@@ -119,16 +118,16 @@ namespace APIStates
                     { "Manchester", 1 },
                     { "Concord", 2 }
                 };
-                
+
                 foreach (var s in dict1)
                 {
                     var id = s.Key + " " + Convert.ToInt16(s.Value);
                     await DbMongo.Connect(id);
                 }
-                
+
                 CreateDelagates run1 = GetDelagates;
                 run1(args);
-                
+
                 // List some CITY'S IN NEW HAMPSHIRE But Not Done Ye
                 //
 
