@@ -1,13 +1,32 @@
-﻿using APIStates.States;
-using Carter;
+﻿using Carter;
 using DB;
 using Init;
 using Microsoft.AspNetCore.Builder;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
+namespace AsyncId
+{
+    internal abstract class GetSyncTask
+    {
+        public static async Task GetTask()
+        {
+            Thread.Sleep(2 * 1000);
+            SendTask();
+            await Task.CompletedTask;
+        }
+
+        private static void SendTask()
+        {
+            Console.WriteLine("Task Completed");
+        }
+    }
+}
+
 namespace Init
 {
+    
+    
     public interface IGetClientOn
     {
         string ClientOn(string clientMessage);
@@ -39,7 +58,7 @@ namespace DB
             return uri.ToLower();
         }
 
-        public static void Connect(string? dataState)
+        public static async Task Connect(string? dataState)
         {
             var db = URi("mongodb://localhost:27017");
 
@@ -48,7 +67,8 @@ namespace DB
             var dbClient = GetDb("states");
             var dbDb = mongoClient.GetDatabase(dbClient);
             var coll = dbDb.GetCollection<BsonDocument>("state");
-            coll.InsertOne(new BsonDocument("state", dataState));
+            await coll.InsertOneAsync(new BsonDocument("state", dataState));
+
         }
 
         private static string GetDb(string db)
@@ -62,50 +82,63 @@ namespace APIStates
 {
     internal abstract class Program
     {
-        
+
         private delegate void CreateDelagates(string[] args);
-        
+
         public static void GetDelagates(string[] args)
         {
 
             var clients = new Clients();
-            
+
             var builder = WebApplication.CreateBuilder(args);
             builder.Services.AddCarter();
             var app = builder.Build();
             app.MapCarter();
-            
+
             app.MapGet("/", () => clients.ClientOn("Hello I am Ryan The Developer"));
             app.Run();
         }
 
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             if (!args.Length.Equals(0)) Console.WriteLine("No Args Found");
             try
             {
-                var state = State.States;
-                var city = State.City;
+                string[] states = ["NYC", "MA", "NH"];
                 
-                // List some USA States Not Done Yet
-                state.Add("NH");
-                state.Add("MA");
-                state.Add("NY");
 
-                // List some CITY'S IN NEW HAMPSHIRE But Not Done Yet
-                city.Add("Nashua");
-                city.Add("Manchester");
-                city.Add("Concord");
+                foreach (var st in states)
+                {
+                    await DbMongo.Connect(st);
+                    Console.WriteLine(states);
+                }
+
+                var dict1 = new Dictionary<string, int>
+                {
+                    { "Nashua", 0 },
+                    { "Manchester", 1 },
+                    { "Concord", 2 }
+                };
                 
-                CreateDelagates run = GetDelagates;
-                DbMongo.Connect(state.ToString());
-                run(args);
+                foreach (var s in dict1)
+                {
+                    var id = s.Key + " " + Convert.ToInt16(s.Value);
+                    await DbMongo.Connect(id);
+                }
+                
+                CreateDelagates run1 = GetDelagates;
+                run1(args);
+                
+                // List some CITY'S IN NEW HAMPSHIRE But Not Done Ye
+                //
+
+                await AsyncId.GetSyncTask.GetTask();
             }
+
             catch (Exception ce)
             {
                 Console.Write(ce.Message);
             }
-            
         }
     }
 }
